@@ -43,7 +43,7 @@ OUTPUT_FILE = "../output/clusters_" + EXECUTION_NAME + ".csv"
 SETTINGS_FILE = "../output/settings_" + EXECUTION_NAME
 
 # Contiene los records etiquetados a mano con el entrenamiento activo
-TRAINING_FILE = "../output/training_" + EXECUTION_NAME
+TRAINING_FILE = "../output/training_" + EXECUTION_NAME + ".json"
 
 
 # ######################
