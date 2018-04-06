@@ -1,5 +1,5 @@
 # ######################
-# ###     GENERAL    ###
+# ###    GENERAL     ###
 # ######################
 
 # Nombre del test. Determina el nombre de los ficheros de salida para diferenciarlos de otras ejecuciones
@@ -28,6 +28,7 @@ LOAD_SETTINGS = False
 # ######################
 # ###     RUTAS      ###
 # ######################
+# TODO: [Dev] Rutas calculadas para datalake
 
 # Carpeta para almacenar ficheros profiling
 PROFILING_FILE = "../profiling/" + EXECUTION_NAME + ".prof"
@@ -53,6 +54,7 @@ TRAINING_FILE = "../output/training_" + EXECUTION_NAME
 # Lista de diccionarios, cada diccionario se corresponde con una variable
 # Para tipos de variables y parámetros opcionales:
 # http://dedupe.readthedocs.io/en/latest/Variable-definition.html
+# TODO: [] Acordar campos, tipos y hasEmpty
 FIELDS = [
     {"field": "NOMB", "type": "String"},
     {"field": "APE1", "type": "String"},
@@ -72,4 +74,5 @@ INDEX_PREDICATES = True
 # Peso del recall frente a la precisión para calcular el umbral de la regresión logística
 # score = recall * precision / (recall + recall_weight ** 2 * precision)
 # https://github.com/dedupeio/dedupe/blob/master/dedupe/api.py [86]
+# TODO: [] Acordar peso
 RECALL_WEIGHT = 1
