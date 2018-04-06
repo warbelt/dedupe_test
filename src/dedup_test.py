@@ -1,10 +1,8 @@
 import csv
-import time
 from collections import OrderedDict
 
-import dedupe
 import cProfile
-
+import dedupe
 import dedup_settings as settings
 
 
@@ -31,29 +29,20 @@ def read_data(filename):
     return data_d
 
 
-# COPIADO DE examples.py
-# CUIDADO!
-# Cambios en la lectura del csv input
-# ### encoding=latin_1
-# ### delimiter=";"
-# ### canonical_rep = {}
 def write_clusters(clustered_dupes, data_d):
     # ## Writing Results
 
     # Write our original data back out to a CSV with a new column called
     # 'Cluster ID' which indicates which records refer to each other.
 
-    canonical_rep = {}
     cluster_membership = {}
     cluster_id = 0
     for (cluster_id, cluster) in enumerate(clustered_dupes):
         id_set, scores = cluster
         cluster_d = [data_d[c] for c in id_set]
-        canonical_rep = dedupe.canonicalize(cluster_d)
         for record_id, score in zip(id_set, scores):
             cluster_membership[record_id] = {
                 "cluster id": cluster_id,
-                "canonical representation": canonical_rep,
                 "confidence": score
             }
 
@@ -68,9 +57,6 @@ def write_clusters(clustered_dupes, data_d):
         heading_row = next(reader)
         heading_row.insert(0, 'confidence_score')
         heading_row.insert(0, 'Cluster ID')
-        canonical_keys = canonical_rep.keys()
-        for key in canonical_keys:
-            heading_row.append('canonical_' + key)
 
         writer.writerow(heading_row)
 
@@ -78,17 +64,14 @@ def write_clusters(clustered_dupes, data_d):
             row_id = int(row[0])
             if row_id in cluster_membership:
                 cluster_id = cluster_membership[row_id]["cluster id"]
-                canonical_rep = cluster_membership[row_id]["canonical representation"]
                 row.insert(0, cluster_membership[row_id]['confidence'])
                 row.insert(0, cluster_id)
-                for key in canonical_keys:
-                    row.append(canonical_rep[key].encode('latin_1'))
+
             else:
                 row.insert(0, None)
                 row.insert(0, singleton_id)
                 singleton_id += 1
-                for key in canonical_keys:
-                    row.append(None)
+
             writer.writerow(row)
 
 
@@ -128,8 +111,6 @@ def deduplicate():
 
     write_clusters(clustered_dupes, data_d)
 
-    timer.print_times()
-
 
 def main():
     result = {
@@ -148,6 +129,6 @@ if __name__ == "__main__":
         main()
 
         pr.disable()
-        pr.dump_stats(settings.PROFILING_FILENAME)
+        pr.dump_stats(settings.PROFILING_FILE)
     else:
         main()

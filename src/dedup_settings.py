@@ -8,7 +8,7 @@ EXECUTION_NAME = "train_ip_ext_001"
 # Modo de ejecución:
 #   - "test" : completa con sample, active training, train, match
 #   - "active_training" : sample, active training. Guarda labels en fichero
-DEDUPE_MODE = "active_training"
+DEDUPE_MODE = "test"
 
 # Tipo de codificación de documentos de entrada
 ENCODING = "latin_1"
@@ -17,8 +17,13 @@ ENCODING = "latin_1"
 DELIMITER = ';'
 
 # Activar el profiling con cProfile
-PROFILING = True
+PROFILING = False
 
+# Cargar entrenamiento activo
+LOAD_TRAINING = True
+
+# Cargar modelo entrenado y predicados
+LOAD_SETTINGS = False
 
 # ######################
 # ###     RUTAS      ###
