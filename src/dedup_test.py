@@ -8,20 +8,6 @@ import cProfile
 import dedup_settings as settings
 
 
-class Timer:
-    def __init__(self):
-        self.start_time = time.clock()
-        self._recorded_times = OrderedDict()
-
-    def step(self, name="Unknown"):
-        elapsed = time.clock() - self.start_time
-        self.start_time = time.clock()
-        self._recorded_times[name] = elapsed
-
-    def print_times(self):
-        print(self._recorded_times)
-
-
 def preprocess(column):
     if not column:
         column = None
@@ -121,45 +107,35 @@ def active_training():
 def deduplicate():
     print("MODE: Deduplicate")
 
-    timer = Timer()
     data_d = read_data(settings.INPUT_FILE)
-    timer.step("Load data")
 
     deduper = dedupe.Dedupe(settings.FIELDS)
-    timer.step("Initialize dedupe")
 
     deduper.sample(data_d, settings.SAMPLE_SIZE)
-    timer.step("Sample")
 
     dedupe.consoleLabel(deduper)
-    timer.step("Label")
 
     deduper.train(settings.INDEX_PREDICATES)
-    timer.step("Train")
 
     with open(settings.TRAINING_FILE, 'w') as tf:
         deduper.writeTraining(tf)
     with open(settings.SETTINGS_FILE, 'wb') as sf:
         deduper.writeSettings(sf)
-    timer.step("Save settings")
 
     threshold = deduper.threshold(data_d, recall_weight=settings.RECALL_WEIGHT)
-    timer.step("Calculate threshold")
 
     clustered_dupes = deduper.match(data_d, threshold)
-    timer.step("Calculate clusters")
 
     write_clusters(clustered_dupes, data_d)
-    timer.step("Write clustered data")
 
     timer.print_times()
 
 
 def main():
     result = {
-        "train": deduplicate(),
-        "test": active_training(),
-    }[settings.DEDUPE_MODE]
+        "test": deduplicate,
+        "active_training": active_training,
+    }[settings.DEDUPE_MODE]()
 
     return result
 

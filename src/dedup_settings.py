@@ -7,8 +7,8 @@ EXECUTION_NAME = "train_ip_ext_001"
 
 # Modo de ejecución:
 #   - "test" : completa con sample, active training, train, match
-#   - "train" : sample, active training. Guarda labels en fichero
-DEDUPE_MODE = "train"
+#   - "active_training" : sample, active training. Guarda labels en fichero
+DEDUPE_MODE = "active_training"
 
 # Tipo de codificación de documentos de entrada
 ENCODING = "latin_1"
