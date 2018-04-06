@@ -18,13 +18,18 @@ def read_data(filename):
     where the key is a unique record ID and each value is dict
     """
 
+    try:
+        f = open(filename, encoding=settings.ENCODING)
+    except IOError:
+        print(filename + " no encontrado")
+        raise IOError
+
+    reader = csv.DictReader(f, delimiter=settings.DELIMITER)
     data_d = {}
-    with open(filename, encoding=settings.ENCODING) as f:
-        reader = csv.DictReader(f, delimiter=settings.DELIMITER)
-        for row in reader:
-            clean_row = [(k, preprocess(v)) for (k, v) in row.items()]
-            row_id = int(row['CONTACTO'])
-            data_d[row_id] = dict(clean_row)
+    for row in reader:
+        clean_row = [(k, preprocess(v)) for (k, v) in row.items()]
+        row_id = int(row['CONTACTO'])
+        data_d[row_id] = dict(clean_row)
 
     return data_d
 
@@ -78,7 +83,12 @@ def write_clusters(clustered_dupes, data_d):
 def active_training():
     print("MODE: Active training")
 
-    data_d = read_data(settings.INPUT_FILE)
+    try:
+        data_d = read_data(settings.INPUT_FILE)
+    except IOError:
+        print("No se pudo abrir el fichero de records de entrada - " + settings.INPUT_FILE)
+        raise
+
     deduper = dedupe.Dedupe(settings.FIELDS)
     deduper.sample(data_d, settings.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
@@ -90,7 +100,11 @@ def active_training():
 def deduplicate():
     print("MODE: Deduplicate")
 
-    data_d = read_data(settings.INPUT_FILE)
+    try:
+        data_d = read_data(settings.INPUT_FILE)
+    except IOError:
+        print("No se pudo abrir el fichero de records de entrada - " + settings.INPUT_FILE)
+        raise
 
     deduper = dedupe.Dedupe(settings.FIELDS)
 
@@ -113,12 +127,13 @@ def deduplicate():
 
 
 def main():
-    result = {
-        "test": deduplicate,
-        "active_training": active_training,
-    }[settings.DEDUPE_MODE]()
-
-    return result
+    try:
+        {
+            "test": deduplicate,
+            "active_training": active_training,
+        }[settings.DEDUPE_MODE]()
+    except:
+        print("Ejecución cancelada")
 
 
 if __name__ == "__main__":
