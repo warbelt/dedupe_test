@@ -1,9 +1,8 @@
 import csv
-from collections import OrderedDict
 
 import cProfile
 import dedupe
-import dedup_settings as settings
+import src.dedup_settings as settings
 
 
 def preprocess(column):
@@ -34,7 +33,7 @@ def read_data(filename):
     return data_d
 
 
-def write_clusters(clustered_dupes, data_d):
+def write_clusters(clustered_dupes):
     # ## Writing Results
 
     # Write our original data back out to a CSV with a new column called
@@ -44,7 +43,6 @@ def write_clusters(clustered_dupes, data_d):
     cluster_id = 0
     for (cluster_id, cluster) in enumerate(clustered_dupes):
         id_set, scores = cluster
-        cluster_d = [data_d[c] for c in id_set]
         for record_id, score in zip(id_set, scores):
             cluster_membership[record_id] = {
                 "cluster id": cluster_id,
@@ -109,7 +107,6 @@ def deduplicate():
     deduper = dedupe.Dedupe(settings.FIELDS)
 
     deduper.sample(data_d, settings.SAMPLE_SIZE)
-
     dedupe.consoleLabel(deduper)
 
     deduper.train(settings.INDEX_PREDICATES)
@@ -123,7 +120,7 @@ def deduplicate():
 
     clustered_dupes = deduper.match(data_d, threshold)
 
-    write_clusters(clustered_dupes, data_d)
+    write_clusters(clustered_dupes)
 
 
 def main():
