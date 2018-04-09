@@ -3,7 +3,7 @@ import csv
 import cProfile
 import dedupe
 
-import src.dedup_config as config
+import src.dedup_config as CONFIG
 from src.dedup_utils import *
 
 
@@ -14,12 +14,12 @@ def read_messy_data(filename):
     """
 
     try:
-        f = open(filename, encoding=config.ENCODING)
+        f = open(filename, encoding=CONFIG.GENERAL.ENCODING)
     except IOError:
         print(filename + " no encontrado")
         raise IOError
 
-    reader = csv.DictReader(f, delimiter=config.DELIMITER)
+    reader = csv.DictReader(f, delimiter=CONFIG.GENERAL.DELIMITER)
     data_d = {}
     for row in reader:
         clean_row = [(k, preprocess(v)) for (k, v) in row.items()]
@@ -47,11 +47,11 @@ def write_clusters(clustered_dupes):
 
     singleton_id = cluster_id + 1
 
-    with open(config.OUTPUT_FILE, 'w', encoding=config.ENCODING) as f_output, \
-            open(config.INPUT_FILE, encoding=config.ENCODING) as f_input:
+    with open(CONFIG.PATHS.OUTPUT_FILE, 'w', encoding=CONFIG.GENERAL.ENCODING) as f_output, \
+            open(CONFIG.PATHS.INPUT_FILE, encoding=CONFIG.GENERAL.ENCODING) as f_input:
 
         writer = csv.writer(f_output)
-        reader = csv.reader(f_input, delimiter=config.DELIMITER)
+        reader = csv.reader(f_input, delimiter=CONFIG.GENERAL.DELIMITER)
 
         heading_row = next(reader)
         heading_row.insert(0, 'confidence_score')
@@ -78,16 +78,16 @@ def active_training():
     print("MODE: Active training")
 
     try:
-        data_d = read_messy_data(config.INPUT_FILE)
+        data_d = read_messy_data(CONFIG.PATHS.INPUT_FILE)
     except IOError:
-        print("No se pudo abrir el fichero de records de entrada - " + config.INPUT_FILE)
+        print("No se pudo abrir el fichero de records de entrada - " + CONFIG.PATHS.INPUT_FILE)
         raise
 
-    deduper = dedupe.Dedupe(config.FIELDS)
-    deduper.sample(data_d, config.SAMPLE_SIZE)
+    deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
+    deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
 
-    with open(config.TRAINING_FILE, 'w') as tf:
+    with open(CONFIG.PATHS.TRAINING_FILE, 'w') as tf:
         deduper.writeTraining(tf)
 
 
@@ -95,24 +95,24 @@ def deduplicate():
     print("MODE: Deduplicate")
 
     try:
-        data_d = read_messy_data(config.INPUT_FILE)
+        data_d = read_messy_data(CONFIG.PATHS.INPUT_FILE)
     except IOError:
-        print("No se pudo abrir el fichero de records de entrada - " + config.INPUT_FILE)
+        print("No se pudo abrir el fichero de records de entrada - " + CONFIG.PATHS.INPUT_FILE)
         raise
 
-    deduper = dedupe.Dedupe(config.FIELDS)
+    deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
 
-    deduper.sample(data_d, config.SAMPLE_SIZE)
+    deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
 
-    deduper.train(config.USE_INDEX_PREDICATES)
+    deduper.train(CONFIG.DEDUPE.USE_INDEX_PREDICATES)
 
-    with open(config.TRAINING_FILE, 'w') as tf:
+    with open(CONFIG.PATHS.TRAINING_FILE, 'w') as tf:
         deduper.writeTraining(tf)
-    with open(config.SETTINGS_FILE, 'wb') as sf:
+    with open(CONFIG.PATHS.SETTINGS_FILE, 'wb') as sf:
         deduper.writeSettings(sf)
 
-    threshold = deduper.threshold(data_d, recall_weight=config.RECALL_WEIGHT)
+    threshold = deduper.threshold(data_d, recall_weight=CONFIG.DEDUPE.RECALL_WEIGHT)
     clustered_dupes = deduper.match(data_d, threshold)
 
     write_clusters(clustered_dupes)
@@ -123,19 +123,19 @@ def main():
         {
             "test": deduplicate,
             "active_training": active_training,
-        }[config.DEDUPE_MODE]()
+        }[CONFIG.GENERAL.DEDUPE_MODE]()
     except IOError:
         print("Ejecución cancelada")
 
 
 if __name__ == "__main__":
-    if config.PROFILING:
+    if CONFIG.GENERAL.PROFILING:
         pr = cProfile.Profile()
         pr.enable()
 
         main()
 
         pr.disable()
-        pr.dump_stats(config.PROFILING_FILE)
+        pr.dump_stats(CONFIG.PATHS.PROFILING_FILE)
     else:
         main()
