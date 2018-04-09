@@ -3,28 +3,23 @@ import csv
 import cProfile
 import dedupe
 
-import src.dedup_settings as settings
+import src.dedup_config as config
+from src.dedup_utils import *
 
 
-def preprocess(column):
-    if not column:
-        column = None
-    return column
-
-
-def read_data(filename):
+def read_messy_data(filename):
     """
     Read in our data from a CSV file and create a dictionary of records,
     where the key is a unique record ID and each value is dict
     """
 
     try:
-        f = open(filename, encoding=settings.ENCODING)
+        f = open(filename, encoding=config.ENCODING)
     except IOError:
         print(filename + " no encontrado")
         raise IOError
 
-    reader = csv.DictReader(f, delimiter=settings.DELIMITER)
+    reader = csv.DictReader(f, delimiter=config.DELIMITER)
     data_d = {}
     for row in reader:
         clean_row = [(k, preprocess(v)) for (k, v) in row.items()]
@@ -52,11 +47,11 @@ def write_clusters(clustered_dupes):
 
     singleton_id = cluster_id + 1
 
-    with open(settings.OUTPUT_FILE, 'w', encoding=settings.ENCODING) as f_output, \
-            open(settings.INPUT_FILE, encoding=settings.ENCODING) as f_input:
+    with open(config.OUTPUT_FILE, 'w', encoding=config.ENCODING) as f_output, \
+            open(config.INPUT_FILE, encoding=config.ENCODING) as f_input:
 
         writer = csv.writer(f_output)
-        reader = csv.reader(f_input, delimiter=settings.DELIMITER)
+        reader = csv.reader(f_input, delimiter=config.DELIMITER)
 
         heading_row = next(reader)
         heading_row.insert(0, 'confidence_score')
@@ -83,16 +78,16 @@ def active_training():
     print("MODE: Active training")
 
     try:
-        data_d = read_data(settings.INPUT_FILE)
+        data_d = read_messy_data(config.INPUT_FILE)
     except IOError:
-        print("No se pudo abrir el fichero de records de entrada - " + settings.INPUT_FILE)
+        print("No se pudo abrir el fichero de records de entrada - " + config.INPUT_FILE)
         raise
 
-    deduper = dedupe.Dedupe(settings.FIELDS)
-    deduper.sample(data_d, settings.SAMPLE_SIZE)
+    deduper = dedupe.Dedupe(config.FIELDS)
+    deduper.sample(data_d, config.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
 
-    with open(settings.TRAINING_FILE, 'w') as tf:
+    with open(config.TRAINING_FILE, 'w') as tf:
         deduper.writeTraining(tf)
 
 
@@ -100,25 +95,24 @@ def deduplicate():
     print("MODE: Deduplicate")
 
     try:
-        data_d = read_data(settings.INPUT_FILE)
+        data_d = read_messy_data(config.INPUT_FILE)
     except IOError:
-        print("No se pudo abrir el fichero de records de entrada - " + settings.INPUT_FILE)
+        print("No se pudo abrir el fichero de records de entrada - " + config.INPUT_FILE)
         raise
 
-    deduper = dedupe.Dedupe(settings.FIELDS)
+    deduper = dedupe.Dedupe(config.FIELDS)
 
-    deduper.sample(data_d, settings.SAMPLE_SIZE)
+    deduper.sample(data_d, config.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
 
-    deduper.train(settings.INDEX_PREDICATES)
+    deduper.train(config.INDEX_PREDICATES)
 
-    with open(settings.TRAINING_FILE, 'w') as tf:
+    with open(config.TRAINING_FILE, 'w') as tf:
         deduper.writeTraining(tf)
-    with open(settings.SETTINGS_FILE, 'wb') as sf:
+    with open(config.SETTINGS_FILE, 'wb') as sf:
         deduper.writeSettings(sf)
 
-    threshold = deduper.threshold(data_d, recall_weight=settings.RECALL_WEIGHT)
-
+    threshold = deduper.threshold(data_d, recall_weight=config.RECALL_WEIGHT)
     clustered_dupes = deduper.match(data_d, threshold)
 
     write_clusters(clustered_dupes)
@@ -129,19 +123,19 @@ def main():
         {
             "test": deduplicate,
             "active_training": active_training,
-        }[settings.DEDUPE_MODE]()
-    except:
+        }[config.DEDUPE_MODE]()
+    except IOError:
         print("Ejecución cancelada")
 
 
 if __name__ == "__main__":
-    if settings.PROFILING:
+    if config.PROFILING:
         pr = cProfile.Profile()
         pr.enable()
 
         main()
 
         pr.disable()
-        pr.dump_stats(settings.PROFILING_FILE)
+        pr.dump_stats(config.PROFILING_FILE)
     else:
         main()
