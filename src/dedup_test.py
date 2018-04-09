@@ -74,15 +74,19 @@ def write_clusters(clustered_dupes):
             writer.writerow(row)
 
 
+# Función para realizar entrenamiento activo (clasificación manual de pares)
+# Después de finalizar guarda todos los casos en un fichero y termina el proceso
 def active_training():
     print("MODE: Active training")
 
+    # carga fichero de datos a deduplicar
     try:
         data_d = read_messy_data(CONFIG.PATHS.INPUT_FILE)
     except IOError:
         print("No se pudo abrir el fichero de records de entrada - " + CONFIG.PATHS.INPUT_FILE)
         raise
 
+    # Entrenamiento Activo
     deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
     deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
@@ -91,28 +95,36 @@ def active_training():
         deduper.writeTraining(tf)
 
 
+# Función principal de deduplicación. Realiza todas las tareas
 def deduplicate():
     print("MODE: Deduplicate")
 
+    # Carga fichero de datos a deduplicar
     try:
         data_d = read_messy_data(CONFIG.PATHS.INPUT_FILE)
     except IOError:
         print("No se pudo abrir el fichero de records de entrada - " + CONFIG.PATHS.INPUT_FILE)
         raise
 
+    # Inicializa objeto dedupe
     deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
 
+    # Muestreo y entrenamiento activo
     deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
 
+    # Entrenamiento de modelo predictivo (por defecto regresión logística
     deduper.train(CONFIG.DEDUPE.USE_INDEX_PREDICATES)
 
+    # Guarda
     with open(CONFIG.PATHS.TRAINING_FILE, 'w') as tf:
         deduper.writeTraining(tf)
     with open(CONFIG.PATHS.SETTINGS_FILE, 'wb') as sf:
         deduper.writeSettings(sf)
 
+    # Calcula umbral para la regresión logistica
     threshold = deduper.threshold(data_d, recall_weight=CONFIG.DEDUPE.RECALL_WEIGHT)
+    # Agrupación de matches en clusters
     clustered_dupes = deduper.match(data_d, threshold)
 
     write_clusters(clustered_dupes)
