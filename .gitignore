@@ -48,3 +48,9 @@ fabric.properties
 
 # Editor-based Rest Client
 .idea/httpRequests
+
+activate.bat
+dataset*
+output*
+profiling*
+.idea/
