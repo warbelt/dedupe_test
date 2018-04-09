@@ -3,8 +3,10 @@
 # ######################
 
 # Nombre del test. Determina el nombre de los ficheros de salida para diferenciarlos de otras ejecuciones
+# Solo aplica cuando las rutas no son calculadas
 EXECUTION_NAME = "train_ip_ext_001"
 
+# TODO: Buscar solución más elegante para separar pruebas y produccion
 # Modo de ejecución:
 #   - "test" : completa con sample, active training, train, match
 #   - "active_training" : sample, active training. Guarda labels en fichero
@@ -16,14 +18,26 @@ ENCODING = "latin_1"
 # Cadena delimitadora de csv
 DELIMITER = ';'
 
-# Activar el profiling con cProfile
+# Generar profiling con cProfile.
+# El profiling generado se guarda en PROFILING_FILE
+# Permite visualizar una pila de llamadas y tiempos. Recomendado usar Snakeviz para analizar el profiling
+# Para usar Snakeviz hay que activar antes el virtual environment de la deduplicación
 PROFILING = False
 
-# Cargar entrenamiento activo
+# Cargar los casos clasificados en entrenamientos activos anteriores
+# Se carga desde el fichero TRAINING_FILE
+# Se puede cargar y realizar una nueva fase de entrenamiento activo sobre las anteriores para ampliarla
 LOAD_TRAINING = True
 
 # Cargar modelo entrenado y predicados
+# Se carga desde el fichero SETTINGS_FILE
+# Si se carga el modelo y los predicados no se debe repetir el proceso de train()
 LOAD_SETTINGS = False
+
+# Calcular las rutas en función de la fecha actual a partir de una ruta base
+# Si es False, usa las rutas escritas en la sección RUTAS
+CALCULATE_PATHS = False
+
 
 # ######################
 # ###     RUTAS      ###
@@ -39,11 +53,11 @@ INPUT_FILE = "../dataset/CRM_CONT.CSV"
 # Fichero de resultados
 OUTPUT_FILE = "../output/clusters_" + EXECUTION_NAME + ".csv"
 
-# Contiene el modelo entrenado y los predicados
-SETTINGS_FILE = "../output/settings_" + EXECUTION_NAME
-
 # Contiene los records etiquetados a mano con el entrenamiento activo
 TRAINING_FILE = "../output/training_" + EXECUTION_NAME + ".json"
+
+# Contiene el modelo entrenado y los predicados
+SETTINGS_FILE = "../output/settings_" + EXECUTION_NAME
 
 
 # ######################
@@ -63,7 +77,7 @@ FIELDS = [
     {"field": "TFFI", "type": "String"},
 ]
 
-# Tamaño de muestra para el muestreo
+# Cantidad de registros muestreados para el entrenamiento
 SAMPLE_SIZE = 15000
 
 # Usar index predicates en el training o no

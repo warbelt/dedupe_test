@@ -105,7 +105,7 @@ def deduplicate():
     deduper.sample(data_d, config.SAMPLE_SIZE)
     dedupe.consoleLabel(deduper)
 
-    deduper.train(config.INDEX_PREDICATES)
+    deduper.train(config.USE_INDEX_PREDICATES)
 
     with open(config.TRAINING_FILE, 'w') as tf:
         deduper.writeTraining(tf)
