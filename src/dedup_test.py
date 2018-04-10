@@ -102,7 +102,7 @@ def active_training():
         data_d = read_messy_data(CONFIG.PATHS.INPUT_FILE)
     except IOError:
         print("No se pudo abrir el fichero de records de entrada - " + CONFIG.PATHS.INPUT_FILE)
-        raise
+        raise IOError
 
     # Entrenamiento Activo
     deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
@@ -122,30 +122,42 @@ def deduplicate():
         data_d = read_messy_data(CONFIG.PATHS.INPUT_FILE)
     except IOError:
         print("No se pudo abrir el fichero de records de entrada - " + CONFIG.PATHS.INPUT_FILE)
-        raise
+        raise IOError
 
-    # Inicializa objeto dedupe
-    deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
+    if CONFIG.GENERAL.LOAD_SETTINGS:
+        try:
+            with open(CONFIG.PATHS.SETTINGS_FILE, 'rb') as f:
+                deduper = dedupe.StaticDedupe(f)
+        except IOError:
+            print("No se pudo abrir el fichero de settings de dedupe - " + CONFIG.PATHS.SETTINGS_FILE)
+            raise IOError
+    else:
+        # Inicializa objeto dedupe
+        deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
 
-    # Muestreo y entrenamiento activo
-    deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
-    dedupe.consoleLabel(deduper)
+        # Muestreo y entrenamiento activo
+        deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
+        dedupe.consoleLabel(deduper)
 
-    # Entrenamiento de modelo predictivo (por defecto regresión logística
-    deduper.train(CONFIG.DEDUPE.USE_INDEX_PREDICATES)
+        # Entrenamiento de modelo predictivo (por defecto regresión logística
+        deduper.train(CONFIG.DEDUPE.USE_INDEX_PREDICATES)
 
-    # Guarda
-    with open(CONFIG.PATHS.TRAINING_FILE, 'w') as tf:
-        deduper.writeTraining(tf)
-    with open(CONFIG.PATHS.SETTINGS_FILE, 'wb') as sf:
-        deduper.writeSettings(sf)
+        # Guarda entrenamiento activo, y modelo predictivo + predicados
+        with open(CONFIG.PATHS.TRAINING_FILE, 'w') as tf:
+            deduper.writeTraining(tf)
+        with open(CONFIG.PATHS.SETTINGS_FILE, 'wb') as sf:
+            deduper.writeSettings(sf)
 
-    # Calcula umbral para la regresión logistica
-    threshold = deduper.threshold(data_d, recall_weight=CONFIG.DEDUPE.RECALL_WEIGHT)
-    # Agrupación de matches en clusters
-    clustered_dupes = deduper.match(data_d, threshold)
-
-    write_clusters(clustered_dupes)
+    try:
+        # Calcula umbral para la regresión logistica
+        threshold = deduper.threshold(data_d, recall_weight=CONFIG.DEDUPE.RECALL_WEIGHT)
+        # Agrupación de matches en clusters
+        clustered_dupes = deduper.match(data_d, threshold)
+        # Escrirura en fichero
+        write_clusters(clustered_dupes)
+    except NameError:
+        print("Error - No se pudo inicializar el objeto dedupe")
+        raise NameError
 
 
 def main():
