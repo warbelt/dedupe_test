@@ -26,11 +26,6 @@ def calculate_path():
 # La clave es un record ID único y el valor es un diccionario con los datos
 # Preprocesa los campos
 def read_messy_data(filename):
-    """
-    Read in our data from a CSV file and create a dictionary of records,
-    where the key is a unique record ID and each value is dict
-    """
-
     try:
         f = open(filename, encoding=CONFIG.GENERAL.ENCODING)
     except IOError:
@@ -107,6 +102,15 @@ def active_training():
     # Entrenamiento Activo
     deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
     deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
+
+    # Carga de registros clasificados de entrenamientos anteriores
+    if CONFIG.GENERAL.LOAD_TRAINING:
+        try:
+            with open(CONFIG.PATHS.TRAINING_FILE) as f:
+                deduper.readTraining(f)
+        except IOError:
+            print("No se pudo abrir el fichero de entrenamiento activo -" + CONFIG.PATHS.TRAINING_FILE)
+
     dedupe.consoleLabel(deduper)
 
     with open(CONFIG.PATHS.TRAINING_FILE, 'w') as tf:
@@ -116,6 +120,11 @@ def active_training():
 # Función principal de deduplicación. Realiza todas las tareas
 def deduplicate():
     print("MODE: Deduplicate")
+
+    # Comprueba que va a haber registros clasificados con los que entrenar un modelo:
+    if not (CONFIG.GENERAL.LOAD_TRAINING or CONFIG.GENERAL.PERFORM_ACTIVE_TRAINING):
+        print("ERROR: El entrenamiento activo y la carga desde fichero están desactivados")
+        return
 
     # Carga fichero de datos a deduplicar
     try:
@@ -135,9 +144,19 @@ def deduplicate():
         # Inicializa objeto dedupe
         deduper = dedupe.Dedupe(CONFIG.DEDUPE.FIELDS)
 
-        # Muestreo y entrenamiento activo
-        deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
-        dedupe.consoleLabel(deduper)
+        # Carga de registros clasificados de entrenamientos anteriores
+        if CONFIG.GENERAL.LOAD_TRAINING:
+            try:
+                with open(CONFIG.PATHS.TRAINING_FILE) as f:
+                    deduper.readTraining(f)
+            except IOError:
+                print("No se pudo abrir el fichero de entrenamiento activo - " + CONFIG.PATHS.TRAINING_FILE)
+                raise IOError
+
+        if CONFIG.GENERAL.PERFORM_ACTIVE_TRAINING:
+            # Muestreo y entrenamiento activo
+            deduper.sample(data_d, CONFIG.DEDUPE.SAMPLE_SIZE)
+            dedupe.consoleLabel(deduper)
 
         # Entrenamiento de modelo predictivo (por defecto regresión logística
         deduper.train(CONFIG.DEDUPE.USE_INDEX_PREDICATES)

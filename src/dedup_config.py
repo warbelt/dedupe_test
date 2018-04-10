@@ -24,12 +24,17 @@ class GENERAL:
     # El profiling generado se guarda en PROFILING_FILE
     # Permite visualizar una pila de llamadas y tiempos. Recomendado usar Snakeviz para analizar el profiling
     # Para usar Snakeviz hay que activar antes el virtual environment de la deduplicación
-    PROFILING = False
+    PROFILING = True
 
     # Cargar los casos clasificados en entrenamientos activos anteriores
     # Se carga desde el fichero TRAINING_FILE
     # Se puede cargar y realizar una nueva fase de entrenamiento activo sobre las anteriores para ampliarla
-    LOAD_TRAINING = True
+    LOAD_TRAINING = False
+
+    # Realizar entrenamiento activo previo al entrenamiento del modelo predictivo.
+    # Si es True, se solicitará por pantalla que se etiqueten pares como match o no match
+    # Es necesario que (LOAD_TRAINING || PERFORM_ACTIVE_TRAINING) == 1, o no habrá registros etiquetados
+    PERFORM_ACTIVE_TRAINING = True
 
     # Cargar modelo entrenado y predicados
     # Se carga desde el fichero SETTINGS_FILE
@@ -78,7 +83,7 @@ class DEDUPE:
     # Usar index predicates en el training o no
     # Index predicates son más caros en memoria y computacionalmente. Además no se pueden paralelizar porque se rompe
     # el índice. Mejoran la eficacia del blocking para hacer menos comparaciones
-    USE_INDEX_PREDICATES = True
+    USE_INDEX_PREDICATES = False
 
     # Peso del recall frente a la precisión para calcular el umbral de la regresión logística
     # score = recall * precision / (recall + recall_weight ** 2 * precision)
