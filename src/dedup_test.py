@@ -1,25 +1,10 @@
 import csv
-from datetime import date
 
 import cProfile
 import dedupe
 
 import src.dedup_config as CONFIG
 from src.dedup_utils import *
-
-
-# Calcula la ruta total a la carpeta de deduplicación en función de la ruta base y la fecha
-def calculate_path():
-    # Fecha en formato DDMMYYYY
-    today = date.today()
-    today_string = today.strftime("%d%m%Y")
-
-    # Si la ruta base no termina en "\", la añade al final antes de concatenar la fecha
-    base_path = CONFIG.GENERAL.BASE_PATH
-    if base_path[-1] != "\\":
-        base_path += "\\"
-
-    return base_path + today_string
 
 
 # Lee los datos a deduplicar de un CSV y crea un diccionario de records.
